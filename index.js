@@ -1,44 +1,56 @@
 'user strict'
 require('dotenv').config();
 const express = require('express');
-const mongoose = require('mongoose');
+
 const bodyParser = require('body-parser');
-const Schema = mongoose.Schema;
-// if mongoose < 5.x, force ES6 Promise
-// mongoose.Promise = global.Promise;
+
+const db = require('./db');
+
+
 const app = express();
 app.use(express.static('public'));
-app.use(bodyParser.urlencoded);
+app.use(bodyParser.urlencoded({extended:false}));
 
-const userSchema = new Schema({
-  firstname: String,
-  lastname: String,
-  dateOfBirth: Date
-});
 
-const user = mongoose.model('User' , userSchema);
 
+const user = require('./user/model');
+
+db.on('connected' , () => app.listen(process.env.PORT));
+/*
 mongoose.connect('mongodb://localhost:27017/test' , {useNewUrlParser:true}).then(() => {
   console.log('Connected successfully.');
   app.listen(process.env.PORT);
 }, err => {
   console.log('Connection to db failed: ' + err);
 });
+*/
+app.get('/user' , (req , res) => {
+    user.find().then(usrs => {
+    res.send(usrs);
+    });
+});
 
-app.get('/user' , (req , res )=> {
+app.post('/user' , (req , res )=> {
 
+    /*
+    console.log('data from http post' , req.body);
+    user.create({
+        name : req.body.name , 
+        age : req.body.age , 
+        gender : req.body.gender,
+        color : req.body.color , 
+        weight : req.body.weight , 
+    }).then(usr => {
+        res.send(`user ${usr.name} creaated with id: ${usr._id} age ${usr.age}`);
+    });
+    */
     console.log('data from http post' , req.body);
     user.create({
         firstname : req.body.firstname , 
         lastname : req.body.lastname , 
-        dateOfBirth : new Date (req.body.dateOfBirth).getTime
+        dateOfBirth : new Date(req.body.dob).getTime()
     }).then(usr => {
-        res.send('user ${usr.firstname} creaated with id: ${usr._id}');
-    });
-    app.get('/user' , (req , res) => {
-        user.find().then(usrs => {
-        res.send(usrs);
-        });
+        res.send(`user ${usr.firstname} creaated with id: ${usr._id}`);
     });
     /*
     user.create({
